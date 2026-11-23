@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+artifacts
+docs
+images
+scripts
+test
+tools
+.env
+.env.*
+*.log
+.DS_Store

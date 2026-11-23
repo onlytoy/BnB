@@ -1,14 +1,19 @@
 {
   "name": "bnb-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "泡泡堂 Web 版：WebSocket 房间对战，支持 Bot 补位",
   "scripts": {
     "start": "node server/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "verify:mobile": "node scripts/verify-mobile.mjs",
+    "verify:zoom": "node scripts/verify-zoom.mjs"
   },
   "dependencies": {
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "playwright-core": "1.65.1"
   }
 }

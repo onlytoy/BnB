@@ -1,0 +1,213 @@
+/* Keep mobile controls outside the map so fingers cannot hide players or water bubbles. */
+html {
+  /* Avoid Safari text inflation on rotation and double-tap zoom between scenes.
+     Deliberate pinch zoom remains available outside the game controls. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+.chat-bar input { font-size: 16px; }
+.mobile-hud, .touch-controls { display: none; }
+
+.touch-device .mobile-hud {
+  display: block;
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: calc(var(--side-safe) + 8px);
+  width: calc(var(--control-rail) - 16px);
+  text-align: center;
+  color: #e5f6ff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.8;
+  white-space: pre-line;
+  pointer-events: none;
+}
+.touch-device #view-game {
+  --control-rail: clamp(96px, 17vw, 144px);
+  --side-safe: max(env(safe-area-inset-left), env(safe-area-inset-right));
+  --vertical-safe: max(env(safe-area-inset-top), env(safe-area-inset-bottom));
+  touch-action: pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.touch-device .game-main {
+  --map-height: min(calc(100dvh - 2 * var(--vertical-safe)), calc((100vw - 2 * (var(--side-safe) + var(--control-rail))) * 520 / 600));
+  padding: var(--vertical-safe) calc(var(--side-safe) + var(--control-rail));
+}
+.touch-device #side-panel { display: none; }
+.touch-device #countdown { font-size: clamp(64px, 16vmin, 110px); -webkit-text-stroke-width: 3px; }
+.touch-device #countdown img { height: clamp(64px, 20vmin, 110px); margin: 0 6px; }
+.touch-device #game-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: var(--map-height);
+  object-fit: contain;
+  border-width: 2px;
+}
+.touch-device .touch-controls {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.touch-move-zone {
+  position: absolute;
+  inset: 0 50% 0 0;
+  pointer-events: auto;
+  /* Keep movement + firing from being reinterpreted as a browser pinch. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-device.page-zoomed .touch-move-zone { pointer-events: none; }
+.touch-stick {
+  position: absolute;
+  left: calc(var(--side-safe) + 8px);
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: calc(var(--control-rail) - 16px);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #7cc4ff;
+  background: radial-gradient(circle, #0b427a 12%, #1267a7 64%, #0c3665);
+  box-shadow: inset 0 2px 5px #ffffff40, 0 4px 0 #062c52, 0 6px 14px #02143266;
+  pointer-events: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-stick.floating {
+  left: var(--stick-x);
+  top: var(--stick-y);
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0.8;
+}
+.stick-arrow { position: absolute; color: #91ceff; font-size: 16px; line-height: 20px; }
+.stick-up { left: calc(50% - 8px); top: 6px; }
+.stick-down { left: calc(50% - 8px); bottom: 6px; }
+.stick-left { left: 7px; top: calc(50% - 10px); }
+.stick-right { right: 7px; top: calc(50% - 10px); }
+.touch-knob {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  left: calc(50% - 26px);
+  top: calc(50% - 26px);
+  border-radius: 50%;
+  border: 2px solid #bfe6ff;
+  background: radial-gradient(circle at 36% 25%, #bceeff, #3ba9eb 60%, #0964a8);
+  box-shadow: 0 4px 8px #052c4e99;
+  pointer-events: none;
+}
+.touch-stick[data-direction="up"] .stick-up,
+.touch-stick[data-direction="down"] .stick-down,
+.touch-stick[data-direction="left"] .stick-left,
+.touch-stick[data-direction="right"] .stick-right { color: #ffd54d; }
+.touch-actions {
+  position: absolute;
+  right: calc(var(--side-safe) + 8px);
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: calc(var(--control-rail) - 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.touch-actions button {
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  padding: 0;
+  color: #fff;
+  border: 2px solid #bceaff;
+  text-shadow: 0 1px 1px #074476;
+  box-shadow: inset 0 2px 0 #ffffff66, 0 4px 0 #062c52, 0 6px 12px #02143266;
+}
+.touch-item { width: min(92px, 100%); height: 48px; font-size: 14px; background: linear-gradient(#6ed2ff, #1179c1); }
+.touch-bomb { width: min(82px, 100%); height: auto; aspect-ratio: 1; border-radius: 50%; font-size: 22px; background: linear-gradient(#ffd54d, #f18a0c); }
+.touch-actions button.pressed { transform: translateY(3px); filter: brightness(1.15); box-shadow: inset 0 2px 5px #0003; }
+.touch-actions button:disabled { opacity: 0.5; filter: saturate(0.35); }
+.touch-status {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(var(--side-safe) + 8px);
+  margin: 0;
+  width: calc(var(--control-rail) - 16px);
+  text-align: center;
+  font-size: 12px;
+  line-height: 22px;
+  color: #bfe6ff;
+}
+.touch-rotate { display: none; }
+
+/* Lobby and room need to remain usable before the game on narrow screens. */
+@media (max-width: 1000px) {
+  #view-lobby, #view-room { padding: 10px max(10px, env(safe-area-inset-right)) 10px max(10px, env(safe-area-inset-left)); }
+  .ldb-frame { padding: 8px; gap: 8px; }
+  .ldb-toolbar { flex-wrap: wrap; }
+  .ldb-toolbar .ldb-btn { padding: 8px 12px; font-size: 14px; }
+  .ldb-title { font-size: 20px; letter-spacing: 3px; padding-left: 3px; }
+  .ldb-me { width: 156px; padding: 12px 8px; }
+  .ldb-board { padding: 8px; gap: 8px; overflow: auto; }
+  .room-ops { display: none; }
+  .room-board { padding: 8px; gap: 10px; overflow: auto; }
+  .room-right { width: 300px; }
+  .room-char-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .char-card { min-width: 0; padding: 5px 2px; }
+  .char-pad { width: min(52px, 100%); }
+  .char-pad canvas { max-width: 100%; height: auto; }
+  .char-name { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .room-map { display: none; }
+  .room-slots { gap: 6px; }
+  .room-topbar { gap: 6px; }
+  .room-title { font-size: 19px; }
+  .room-topbar .ldb-btn { padding: 8px 12px; font-size: 14px; }
+}
+@media (max-width: 600px) {
+  .ldb-title, .ldb-me { display: none; }
+  .ldb-rooms { grid-template-columns: 1fr; overflow: auto; align-content: start; }
+  .ldb-toolbar .ldb-toolbar-gap { display: none; }
+  .ldb-toolbar { justify-content: space-between; gap: 6px; }
+  .ldb-toolbar .ldb-btn { font-size: 13px; padding: 8px; }
+  .room-board { flex-direction: column; }
+  .room-left { flex: none; overflow: visible; }
+  .room-left-bottom { min-height: 140px; }
+  .room-right { width: 100%; flex-shrink: 0; overflow: visible; }
+  .room-slots { grid-template-columns: repeat(2, 1fr); }
+  .room-actionbar { margin-top: 4px; }
+  .room-topbar { flex-wrap: wrap; }
+  .chat-bar { flex-wrap: wrap; }
+  .chat-bar input { width: 120px; }
+}
+@media (orientation: portrait) {
+  .touch-device #view-game { --control-rail: 144px; }
+  .touch-device .game-main {
+    --map-height: min(calc(100dvh - 2 * (var(--vertical-safe) + 156px)), calc((100vw - 2 * var(--side-safe)) * 520 / 600));
+    padding: calc(var(--vertical-safe) + 156px) var(--side-safe);
+  }
+  .touch-device .touch-rotate {
+    display: block;
+    position: absolute;
+    top: max(64px, calc(env(safe-area-inset-top) + 52px));
+    right: calc(var(--side-safe) + 8px);
+    margin: 0;
+    width: calc(var(--control-rail) - 16px);
+    text-align: center;
+    color: #ffd54d;
+    font-size: 12px;
+  }
+}
+@media (orientation: landscape) and (max-height: 450px) {
+  .ldb-me { display: none; }
+  .room-mychar, .room-map, .room-right > .room-box:nth-of-type(3) { display: none; }
+  .room-right { width: 268px; }
+  .room-char-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .char-name { font-size: 11px; }
+  .room-actionbar { margin-top: 0; }
+  .room-bigbtn { min-height: 48px; padding: 8px; }
+  .room-chat { min-height: 100px; }
+  .room-slots { grid-template-columns: repeat(3, 1fr); }
+  .slot { padding: 4px; }
+}

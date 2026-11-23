@@ -5,6 +5,7 @@ import { Renderer, drawItemIcon } from './render.js';
 import { CHARACTERS, getChar, avatarCanvas, portraitCanvas, teamColor } from './characters.js';
 import { applyLobbyTextures, drawMapThumb } from './lobby-art.js';
 import { audio } from './audio.js';
+import { createTouchControls } from './touch-controls.js?v=20261123-touch3';
 
 applyLobbyTextures(); // 木纹外框贴图（代码绘制）
 
@@ -27,6 +28,8 @@ let lastStatePrev = null; // 上一帧快照（音效触发对比用）
 let lastCd = null;    // 倒计时数字状态机（null=未开始/已隐藏）
 let roster = new Map(); // 开局静态名册 id -> {name, char, isBot, colorIndex}（快照不再重复下发，合并用）
 let dirs = []; // 当前按住的方向（按下顺序，服务端取最后一个）
+let touchDirection = null;
+let touchControls = null;
 let tileSize = 40; // 瓦片边长（gameStart 消息同步；放泡音效本地预检用）
 let charGridBuilt = false;
 let lobbyRooms = []; // 最近一次大厅房间快照（快速加入用）
@@ -119,6 +122,7 @@ function show(name) {
   currentView = name;
   sceneMusic(name);
   for (const [k, el] of Object.entries(views)) el.classList.toggle('hidden', k !== name);
+  touchControls?.setActive(name === 'game' && gameRunning);
 }
 
 function send(obj) {
@@ -127,7 +131,8 @@ function send(obj) {
 
 // 同步移动输入：发给服务器
 function sendInput() {
-  send({ t: 'input', dir: dirs });
+  const combined = touchDirection ? [...dirs.filter((d) => d !== touchDirection), touchDirection] : dirs;
+  send({ t: 'input', dir: combined });
 }
 
 function toast(text) {
@@ -169,6 +174,7 @@ function route(msg) {
       }
       break;
     case 'gameStart':
+      resetInput();
       gameRunning = true;
       lastState = null;
       lastStatePrev = null;
@@ -200,7 +206,8 @@ function route(msg) {
       break;
     case 'gameOver': {
       gameRunning = false;
-      dirs = [];
+      resetInput();
+      touchControls.setActive(false);
       showResults(msg);
       // 结算配音：胜利语音 / 失败 lose.wav / 平局
       sfx(msg.winnerId == null ? 'draw' : (msg.winnerId === myId ? 'snd/victory' : 'lose'), 0.7);
@@ -706,6 +713,7 @@ function buildLegend() {
 }
 
 function updateHud(msg) {
+  touchControls.update(msg, myId);
   const me = msg.players.find((p) => p.id === myId);
   const alive = msg.players.filter((p) => p.alive).length;
   if (!me) {
@@ -714,6 +722,7 @@ function updateHud(msg) {
   }
   const tl = msg.timeLeft ?? 0;
   const clock = `${Math.floor(tl / 60)}:${String(tl % 60).padStart(2, '0')}`;
+  $('mobile-hud').textContent = `${clock}\n存活 ${alive}/${msg.players.length}\n泡 ${me.maxBombs} · 威力 ${me.range}`;
   const inv = ` · 针×${me.inv.needle} 遥控×${me.inv.remote}`
     + (me.mount ? ` · 坐骑${MOUNT_NAMES[me.mount] ?? me.mount}` : '')
     + (me.kick ? ' · 踢' : '');
@@ -771,19 +780,29 @@ function canPlaceBombNow() {
   return s.bombs.filter((b) => b.owner === myId).length < me.maxBombs;
 }
 
+function placeBomb() {
+  if (!gameRunning) return;
+  send({ t: 'placeBomb' });
+  if (canPlaceBombNow()) sfx('snd/放置泡泡_bomb_set.mp3', 0.45);
+}
+
+function useItem() {
+  if (gameRunning) send({ t: 'useItem' });
+}
+
 window.addEventListener('keydown', (e) => {
   if (!gameRunning) return;
   if (e.code === 'Space') {
     e.preventDefault();
     if (!e.repeat) {
-      send({ t: 'placeBomb' });
-      if (canPlaceBombNow()) sfx('snd/放置泡泡_bomb_set.mp3', 0.45); // 放不出泡（已达上限等）时静默
+      placeBomb();
     }
     return;
   }
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight'
     || e.code === 'ControlLeft' || e.code === 'ControlRight') { // 使用主动道具（Ctrl 对齐盛大版）
-    if (!e.repeat) send({ t: 'useItem' });
+    e.preventDefault();
+    if (!e.repeat) useItem();
     return;
   }
   const d = KEYMAP[e.code];
@@ -805,9 +824,27 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
-window.addEventListener('blur', () => {
+function resetInput() {
   dirs = [];
+  touchDirection = null;
+  touchControls?.reset();
   if (gameRunning) sendInput();
+}
+
+window.addEventListener('blur', resetInput);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) resetInput();
+});
+window.addEventListener('pagehide', resetInput);
+window.addEventListener('resize', resetInput);
+
+touchControls = createTouchControls({
+  onDirection(direction) {
+    touchDirection = direction;
+    if (gameRunning) sendInput();
+  },
+  onBomb: placeBomb,
+  onItem: useItem,
 });
 
 connect();

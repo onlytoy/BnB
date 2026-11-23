@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>泡泡堂</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/mobile.css?v=20261123-touch3">
 </head>
 <body>
   <script>
@@ -176,7 +177,7 @@
         </div>
         <div id="lobby-help" class="ldb-help hidden">
           开设房间创建新对局；快速加入自动进入第一个可加入的房间；练习模式立刻单人开局（Bot 补满 6 人）。<br>
-          操作：方向键 / WASD 移动 · 空格放水泡 · Ctrl/Shift 使用道具（针自救 / 放遥控水泡）。
+          电脑：方向键 / WASD 移动 · 空格放水泡 · Ctrl/Shift 使用道具。手机：左侧摇杆移动，右侧放泡 / 道具，推荐横屏。
         </div>
         <div class="ldb-board">
           <aside class="ldb-me">
@@ -267,6 +268,7 @@
     </section>
 
     <section id="view-game" class="view hidden">
+      <div id="mobile-hud" class="mobile-hud"></div>
       <div class="game-main">
         <div class="canvas-wrap">
           <canvas id="game-canvas" width="600" height="520"></canvas>
@@ -294,6 +296,23 @@
           </div>
           <p class="hint side-hint">方向键 / WASD 移动 · 空格放水泡（场上有自己的遥控泡时改为引爆） · Ctrl/Shift 使用道具 · 顶住花纹木箱长按方向键可推动它（无阻挡时）</p>
         </aside>
+      </div>
+      <div id="touch-controls" class="touch-controls hidden" aria-label="触屏游戏控制">
+        <div id="touch-move-zone" class="touch-move-zone" role="group" aria-label="左半屏移动区：按住任意位置拖动，控制上下左右">
+          <div id="touch-stick" class="touch-stick" aria-hidden="true">
+            <span class="stick-arrow stick-up" aria-hidden="true">▲</span>
+            <span class="stick-arrow stick-down" aria-hidden="true">▼</span>
+            <span class="stick-arrow stick-left" aria-hidden="true">◀</span>
+            <span class="stick-arrow stick-right" aria-hidden="true">▶</span>
+            <span id="touch-knob" class="touch-knob" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="touch-actions">
+          <button id="touch-item" class="touch-item" type="button" disabled>道具 ×0</button>
+          <button id="touch-bomb" class="touch-bomb" type="button" aria-label="放水泡" disabled>放泡</button>
+        </div>
+        <p id="touch-status" class="touch-status">左半屏拖动 · 右手放泡</p>
+        <p class="touch-rotate">横屏视野更大</p>
       </div>
     </section>
   </div>
@@ -340,6 +359,6 @@
 
     audio.playScene('login'); // 首页 BGM（浏览器拦截时由 AudioManager 在首次手势补播）
   </script>
-  <script type="module" src="/main.js"></script>
+  <script type="module" src="/main.js?v=20261123-touch3"></script>
 </body>
 </html>
